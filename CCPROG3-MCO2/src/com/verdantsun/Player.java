@@ -11,7 +11,6 @@ public class Player {
     }
 
     public void addSavings(int amount) {
-
         this.savings += amount;
     }
 
