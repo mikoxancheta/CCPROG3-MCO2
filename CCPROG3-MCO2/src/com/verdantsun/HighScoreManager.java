@@ -2,27 +2,14 @@ package com.verdantsun;
 import java.io.*;
 import java.util.*;
 
-/**
- * Manages high scores for the game. Handles loading from and saving
- * to a JSON file, adding new scores, and displaying top scores.
- */
 public class HighScoreManager {
 
     private ArrayList<HighScoreEntry> highScores;
 
-    /**
-     * Initializes the high score manager with an empty list of scores.
-     */
     public HighScoreManager() {
         highScores = new ArrayList<>();
     }
 
-    /**
-     * Loads high scores from "data/HighScores.json" into the highScores list.
-     * Existing scores are replaced.
-     *
-     * @throws IOException if the file cannot be read.
-     */
     public void loadScores() {
 
         try {
@@ -70,11 +57,6 @@ public class HighScoreManager {
         }
     }
 
-    /**
-     * Saves the current highScores list to "data/HighScores.json".
-     *
-     * @throws IOException if the file cannot be written.
-     */
     public void saveScores() {
 
         try {
@@ -97,12 +79,6 @@ public class HighScoreManager {
         }
     }
 
-    /**
-     * Adds a new high score entry and keeps only the top 10 scores.
-     *
-     * @param name Player's name.
-     * @param savings Player's savings to record.
-     */
     public void addScore(String name, int savings) {
 
         highScores.add(new HighScoreEntry(name, savings));
