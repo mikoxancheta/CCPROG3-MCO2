@@ -1,46 +1,46 @@
 package com.verdantsun;
 
-/**
- * Represents the farm field of the game. The field contains
- * a 10x10 grid of tiles where plants can be planted,
- * watered, fertilized, or affected by meteorites.
- * <p>
- * Precondition: Tile objects must be properly defined.
- */
 public class Field {
 
     private Tile[][] tiles;
 
-    /**
-     * Initializes the field by creating a 10x10 grid of
-     * tiles. Each tile is initially set with loam soil.
-     */
     public Field() {
         this.tiles = new Tile[10][10];
 
+        String[][] map = {
+                {"l","l","l","l","l","l","l","l","l","l"},
+                {"g","s","g","g","s","s","g","g","s","g"},
+                {"l","l","l","l","l","l","l","l","l","l"},
+                {"s","s","s","g","g","g","g","s","s","s"},
+                {"s","l","s","g","g","g","g","s","l","s"},
+                {"s","l","s","g","g","g","g","s","l","s"},
+                {"s","s","s","g","g","g","g","s","s","s"},
+                {"l","l","l","l","l","l","l","l","l","l"},
+                {"g","s","g","g","s","s","g","g","s","g"},
+                {"l","l","l","l","l","l","l","l","l","l"}
+        };
+
         for (int i = 0; i < 10; i++) {
             for (int j = 0; j < 10; j++) {
-                this.tiles[i][j] = new Tile("loam");
+
+                String soil;
+
+                switch (map[i][j]) {
+                    case "l": soil = "loam"; break;
+                    case "s": soil = "sand"; break;
+                    case "g": soil = "gravel"; break;
+                    default: soil = "loam";
+                }
+
+                this.tiles[i][j] = new Tile(soil);
             }
         }
     }
 
-    /**
-     * Retrieves the tile located at the specified row and column.
-     *
-     * @param row The row index of the tile (0-based).
-     * @param col The column index of the tile (0-based).
-     * @return The tile located at the specified position.
-     */
     public Tile getTile(int row, int col) {
         return this.tiles[row][col];
     }
 
-    /**
-     * Updates the state of every tile in the field for the
-     * next day. If a tile contains a plant, the plant will
-     * grow according to its growth rules.
-     */
     public void nextDayUpdate() {
         for (Tile[] row : this.tiles) {
             for (Tile tile : row) {
@@ -49,13 +49,6 @@ public class Field {
         }
     }
 
-    /**
-     * Applies a meteorite strike pattern on the field, affecting specific tiles.
-     * Mature plants on affected tiles are automatically harvested for savings,
-     * while immature plants are destroyed.
-     *
-     * @param player The player who will receive savings from harvested plants.
-     */
     public void applyMeteoritePattern(Player player) {
 
         int[][] affectedTiles = {
@@ -78,9 +71,8 @@ public class Field {
             if (tile.hasPlant()) {
                 Plant plant = tile.getPlant();
 
-                if (plant.isMature()) {
+                if (plant.getCurrentStage().canHarvest()) {
                     int harvestValue = tile.harvestPlant();
-
                     player.addSavings(harvestValue);
 
                     System.out.println(
@@ -99,12 +91,6 @@ public class Field {
         }
     }
 
-    /**
-     * Checks if there is at least one plant currently
-     * planted in the field.
-     *
-     * @return True if at least one tile contains a plant, otherwise false.
-     */
     public boolean hasAnyPlant() {
         for (int i = 0; i < tiles.length; i++) {
             for (int j = 0; j < tiles[i].length; j++) {
@@ -116,19 +102,13 @@ public class Field {
         return false;
     }
 
-    /**
-     * Checks whether there are plants in the field that
-     * still need watering.
-     *
-     * @return True if at least one plant is not yet watered.
-     */
     public boolean hasWaterablePlants() {
         for (int i = 0; i < tiles.length; i++) {
             for (int j = 0; j < tiles[i].length; j++) {
 
                 Tile tile = tiles[i][j];
 
-                if (tile.hasPlant() && !tile.getPlant().isWatered()) {
+                if (tile.hasPlant() && tile.getPlant().getCurrentStage().allowsWatering()) {
                     return true;
                 }
             }
@@ -136,12 +116,6 @@ public class Field {
         return false;
     }
 
-    /**
-     * Determines if there are tiles currently affected
-     * by meteorites in the field.
-     *
-     * @return True if any tile is meteorite affected.
-     */
     public boolean hasMeteoriteTiles() {
         for (int i = 0; i < tiles.length; i++) {
             for (int j = 0; j < tiles[i].length; j++) {
@@ -153,10 +127,6 @@ public class Field {
         return false;
     }
 
-    /**
-     * Displays the entire field grid including soil types,
-     * plant symbols, and meteorite-affected tiles.
-     */
     public void displayField() {
 
         System.out.println();
@@ -196,12 +166,6 @@ public class Field {
         System.out.println("P,T,O,U,W = Plants\n");
     }
 
-    /**
-     * Displays detailed information about plants and
-     * special tiles in the field including growth,
-     * watering status, fertilizer effects, and soil
-     * compatibility.
-     */
     public void displayStatuses() {
 
         boolean plantHeader = false;
@@ -221,11 +185,16 @@ public class Field {
                     Plant p = tile.getPlant();
 
                     if (tile.isPermanentlyFertilized()) {
-                        System.out.println("(" + (i+1) + "," + (j+1) + ") "
+
+                        String cropDisplay = getCropDisplay(p);
+
+                        System.out.println("(" + (i + 1) + "," + (j + 1) + ") "
                                 + p.getName()
+                                + " | Stage: " + p.getCurrentStage().getStageName()
                                 + " | Growth: " + p.getCurrentGrowth() + "/" + p.getMaxGrowth()
                                 + " | Watered: " + (p.isWatered() ? "Yes" : "No")
                                 + " | Permanently Fertilized Tile"
+                                + " | Crop: " + cropDisplay
                                 + " | Preferred Soil: "
                                 + (p.isInPreferredSoil(tile.getSoilType()) ? "Yes" : "No"));
                     } else {
@@ -238,11 +207,15 @@ public class Field {
                                             tile.getFertilizer().getMaxEffectDays();
                         }
 
-                        System.out.println("(" + (i+1) + "," + (j+1) + ") "
+                        String cropDisplay = getCropDisplay(p);
+
+                        System.out.println("(" + (i + 1) + "," + (j + 1) + ") "
                                 + p.getName()
+                                + " | Stage: " + p.getCurrentStage().getStageName()
                                 + " | Growth: " + p.getCurrentGrowth() + "/" + p.getMaxGrowth()
                                 + " | Watered: " + (p.isWatered() ? "Yes" : "No")
                                 + " | Fertilizer Count: " + fertilizerInfo
+                                + " | Crop: " + cropDisplay
                                 + " | Preferred Soil: "
                                 + (p.isInPreferredSoil(tile.getSoilType()) ? "Yes" : "No"));
                     }
@@ -258,13 +231,13 @@ public class Field {
 
                         if (tile.isMeteoriteAffected()) {
 
-                            System.out.println("(" + (i+1) + "," + (j+1) + ") Meteorite Tile");
+                            System.out.println("(" + (i + 1) + "," + (j + 1) + ") Meteorite Tile");
                         } else if (tile.isPermanentlyFertilized()) {
 
-                            System.out.println("(" + (i+1) + "," + (j+1) + ") Permanently Fertilized Tile");
+                            System.out.println("(" + (i + 1) + "," + (j + 1) + ") Permanently Fertilized Tile");
                         } else if (tile.getFertilizer() != null) {
 
-                            System.out.println("(" + (i+1) + "," + (j+1) + ") Tile Fertilized: "
+                            System.out.println("(" + (i + 1) + "," + (j + 1) + ") Tile Fertilized: "
                                     + tile.getFertilizer().getEffectDays()
                                     + "/" + tile.getFertilizer().getMaxEffectDays());
                         }
@@ -272,5 +245,14 @@ public class Field {
                 }
             }
         }
+    }
+
+    private String getCropDisplay(Plant p) {
+        String cropName = p.getCropName();
+        int price = p.getCropPricePerPiece();
+
+        return (cropName != null)
+                ? cropName + " (" + price + " gold each)"
+                : "Not Available";
     }
 }
