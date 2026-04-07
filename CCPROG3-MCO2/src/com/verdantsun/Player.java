@@ -21,7 +21,6 @@ public class Player {
     }
 
     public boolean canAfford(int amount) {
-
         return this.savings >= amount;
     }
 
@@ -30,7 +29,6 @@ public class Player {
     }
 
     public String getName() {
-
         return this.name;
     }
 }
